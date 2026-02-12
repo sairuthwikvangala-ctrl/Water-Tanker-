@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import LandingPage from './pages/LandingPage.tsx';
-import LoginPage from './pages/LoginPage.tsx';
-import RegisterPage from './pages/RegisterPage.tsx';
-import HomePage from './pages/HomePage.tsx';
-import HistoryPage from './pages/HistoryPage.tsx';
-import ProfilePage from './pages/ProfilePage.tsx';
-import BookingOptionsPage from './pages/BookingOptionsPage.tsx';
-import LocationMapPage from './pages/LocationMapPage.tsx';
-import ReceiptDetailsPage from './pages/ReceiptDetailsPage.tsx';
-import OrderConfirmationPage from './pages/OrderConfirmationPage.tsx';
-import AboutUsPage from './pages/AboutUsPage.tsx';
-import AdminDashboardPage from './pages/AdminDashboardPage.tsx';
+import LandingPage from './LandingPage';
+import LoginPage from './LoginPage';
+import RegisterPage from './RegisterPage';
+import HomePage from './HomePage';
+import HistoryPage from './HistoryPage';
+import ProfilePage from './ProfilePage';
+import BookingOptionsPage from './BookingOptionsPage';
+import LocationMapPage from './LocationMapPage';
+import ReceiptDetailsPage from './ReceiptDetailsPage';
+import OrderConfirmationPage from './OrderConfirmationPage';
+import AboutUsPage from './AboutUsPage';
+import AdminDashboardPage from './AdminDashboardPage';
 
 export interface Order {
   id: string;
@@ -50,28 +50,28 @@ const App: React.FC = () => {
   };
 
   const initialUser = getInitialSession();
-  
+
   const [currentPage, setCurrentPage] = useState<number>(() => {
     return initialUser ? 4 : 1;
   });
-  
+
   const [currentUser, setCurrentUser] = useState<User | null>(initialUser);
-  
+
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem('yt_orders');
     return saved ? JSON.parse(saved) : [];
   });
-  
+
   const [userPromoCode, setUserPromoCode] = useState<string | null>(() => {
     return localStorage.getItem('yt_active_promo');
   });
 
   const [isCurrentOrderFree, setIsCurrentOrderFree] = useState(false);
   const [tempSecondaryMobile, setTempSecondaryMobile] = useState("");
-  
+
   const [deliveryLocation, setDeliveryLocation] = useState({
     address: "Karimnagar, Telangana, India",
-    landmark: "Karimnagar City", 
+    landmark: "Karimnagar City",
     coordinates: { lat: 18.4386, lng: 79.1288 } as { lat: number; lng: number } | null,
     isAutoDetected: false
   });
@@ -109,7 +109,7 @@ const App: React.FC = () => {
     };
     const updatedOrders = [newOrder, ...orders];
     setOrders(updatedOrders);
-    
+
     if (isCurrentOrderFree) {
       setIsCurrentOrderFree(false);
       setUserPromoCode(null);
@@ -142,34 +142,34 @@ const App: React.FC = () => {
       case 3:
         return <RegisterPage onNavigate={(page) => setCurrentPage(page)} onRegisterSuccess={loginUser} />;
       case 4:
-        return <HomePage 
-          onNavigate={(page) => setCurrentPage(page)} 
-          orderCount={orders.filter(o => o.mobile === currentUser?.mobile).length} 
-          promoCode={userPromoCode} 
-          setPromoCode={setUserPromoCode} 
+        return <HomePage
+          onNavigate={(page) => setCurrentPage(page)}
+          orderCount={orders.filter(o => o.mobile === currentUser?.mobile).length}
+          promoCode={userPromoCode}
+          setPromoCode={setUserPromoCode}
         />;
       case 5:
         return <HistoryPage onNavigate={(page) => setCurrentPage(page)} userOrders={orders.filter(o => o.mobile === currentUser?.mobile)} />;
       case 6:
-        return <BookingOptionsPage 
-          onNavigate={(page) => setCurrentPage(page)} 
-          options={bookingOptions} 
-          setOptions={setBookingOptions} 
+        return <BookingOptionsPage
+          onNavigate={(page) => setCurrentPage(page)}
+          options={bookingOptions}
+          setOptions={setBookingOptions}
           userPromoCode={userPromoCode}
           setIsFree={setIsCurrentOrderFree}
         />;
       case 7:
         return (
-          <LocationMapPage 
-            onNavigate={(page) => setCurrentPage(page)} 
+          <LocationMapPage
+            onNavigate={(page) => setCurrentPage(page)}
             location={deliveryLocation}
             setLocation={setDeliveryLocation}
           />
         );
       case 8:
         return (
-          <ReceiptDetailsPage 
-            onNavigate={(page) => setCurrentPage(page)} 
+          <ReceiptDetailsPage
+            onNavigate={(page) => setCurrentPage(page)}
             location={deliveryLocation}
             options={bookingOptions}
             mobile={currentUser?.mobile || ""}
@@ -179,8 +179,8 @@ const App: React.FC = () => {
         );
       case 9:
         return (
-          <OrderConfirmationPage 
-            onNavigate={(page) => setCurrentPage(page)} 
+          <OrderConfirmationPage
+            onNavigate={(page) => setCurrentPage(page)}
             location={deliveryLocation}
             addOrder={addOrder}
           />
@@ -192,7 +192,7 @@ const App: React.FC = () => {
       case 12:
         return <AdminDashboardPage onNavigate={(page) => setCurrentPage(page)} orders={orders} updateStatus={updateOrderStatus} onLogout={logout} />;
       default:
-        return <HomePage onNavigate={(page) => setCurrentPage(page)} orderCount={0} promoCode={null} setPromoCode={() => {}} />;
+        return <HomePage onNavigate={(page) => setCurrentPage(page)} orderCount={0} promoCode={null} setPromoCode={() => { }} />;
     }
   };
 
