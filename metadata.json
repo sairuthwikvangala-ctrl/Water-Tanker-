@@ -1,0 +1,8 @@
+
+{
+  "name": "Your Tanker - Fleet Management",
+  "description": "A high-performance web application for managing tanker fleets, providing secure access for drivers and operators.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
