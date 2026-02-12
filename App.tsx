@@ -1,5 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
+import { collection, addDoc, onSnapshot, updateDoc, doc, query, orderBy } from 'firebase/firestore';
+import { db } from './firebase';
 import LandingPage from './LandingPage';
 import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
@@ -57,10 +59,43 @@ const App: React.FC = () => {
 
   const [currentUser, setCurrentUser] = useState<User | null>(initialUser);
 
-  const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('yt_orders');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  // Real-time Firestore listener for orders
+  useEffect(() => {
+    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const ordersData: Order[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        ordersData.push({
+          id: data.id,
+          customerName: data.customerName,
+          mobile: data.mobile,
+          secondaryMobile: data.secondaryMobile,
+          address: data.address,
+          landmark: data.landmark,
+          quantity: data.quantity,
+          type: data.type,
+          price: data.price,
+          coordinates: data.coordinates,
+          status: data.status,
+          timestamp: data.timestamp,
+          isFree: data.isFree,
+          firestoreId: doc.id // Store Firestore doc ID for updates
+        } as Order & { firestoreId?: string });
+      });
+      setOrders(ordersData);
+    }, (error) => {
+      console.error('Error fetching orders:', error);
+      // Fallback to localStorage if Firestore fails
+      const saved = localStorage.getItem('yt_orders');
+      if (saved) setOrders(JSON.parse(saved));
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const [userPromoCode, setUserPromoCode] = useState<string | null>(() => {
     return localStorage.getItem('yt_active_promo');
@@ -82,17 +117,13 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    localStorage.setItem('yt_orders', JSON.stringify(orders));
-  }, [orders]);
-
-  useEffect(() => {
     if (userPromoCode) localStorage.setItem('yt_active_promo', userPromoCode);
     else localStorage.removeItem('yt_active_promo');
   }, [userPromoCode]);
 
-  const addOrder = () => {
+  const addOrder = async () => {
     const price = isCurrentOrderFree ? '₹0' : (bookingOptions.type === 'Express Delivery' ? '₹600' : '₹450');
-    const newOrder: Order = {
+    const newOrder = {
       id: `#WT-${Math.floor(1000 + Math.random() * 9000)}`,
       customerName: currentUser?.username || "Guest",
       mobile: currentUser?.mobile || "9876543210",
@@ -103,21 +134,55 @@ const App: React.FC = () => {
       type: bookingOptions.type,
       price: price,
       coordinates: deliveryLocation.coordinates,
-      status: 'Pending',
+      status: 'Pending' as const,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }),
-      isFree: isCurrentOrderFree
+      isFree: isCurrentOrderFree,
+      createdAt: new Date().toISOString() // For Firestore ordering
     };
-    const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
 
-    if (isCurrentOrderFree) {
-      setIsCurrentOrderFree(false);
-      setUserPromoCode(null);
+    try {
+      // Add to Firestore (will trigger real-time listener to update UI)
+      await addDoc(collection(db, 'orders'), newOrder);
+
+      // Also save to localStorage as backup
+      const updatedOrders = [newOrder, ...orders];
+      localStorage.setItem('yt_orders', JSON.stringify(updatedOrders));
+
+      if (isCurrentOrderFree) {
+        setIsCurrentOrderFree(false);
+        setUserPromoCode(null);
+      }
+    } catch (error) {
+      console.error('Error adding order to Firestore:', error);
+      // Fallback to local-only mode
+      const updatedOrders = [newOrder, ...orders];
+      setOrders(updatedOrders);
+      localStorage.setItem('yt_orders', JSON.stringify(updatedOrders));
+
+      if (isCurrentOrderFree) {
+        setIsCurrentOrderFree(false);
+        setUserPromoCode(null);
+      }
     }
   };
 
-  const updateOrderStatus = (orderId: string, status: 'Pending' | 'Started' | 'Completed') => {
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+  const updateOrderStatus = async (orderId: string, status: 'Pending' | 'Started' | 'Completed') => {
+    try {
+      // Find the order with firestoreId
+      const order = orders.find(o => o.id === orderId) as (Order & { firestoreId?: string }) | undefined;
+
+      if (order?.firestoreId) {
+        // Update in Firestore (will trigger real-time listener)
+        await updateDoc(doc(db, 'orders', order.firestoreId), { status });
+      } else {
+        // Fallback to local update if no firestoreId
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      // Fallback to local update
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+    }
   };
 
   const logout = () => {
