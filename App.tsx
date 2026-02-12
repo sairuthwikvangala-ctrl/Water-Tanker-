@@ -1,17 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import HomePage from './pages/HomePage';
-import HistoryPage from './pages/HistoryPage';
-import ProfilePage from './pages/ProfilePage';
-import BookingOptionsPage from './pages/BookingOptionsPage';
-import LocationMapPage from './pages/LocationMapPage';
-import ReceiptDetailsPage from './pages/ReceiptDetailsPage';
-import OrderConfirmationPage from './pages/OrderConfirmationPage';
-import AboutUsPage from './pages/AboutUsPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
+import LandingPage from './pages/LandingPage.tsx';
+import LoginPage from './pages/LoginPage.tsx';
+import RegisterPage from './pages/RegisterPage.tsx';
+import HomePage from './pages/HomePage.tsx';
+import HistoryPage from './pages/HistoryPage.tsx';
+import ProfilePage from './pages/ProfilePage.tsx';
+import BookingOptionsPage from './pages/BookingOptionsPage.tsx';
+import LocationMapPage from './pages/LocationMapPage.tsx';
+import ReceiptDetailsPage from './pages/ReceiptDetailsPage.tsx';
+import OrderConfirmationPage from './pages/OrderConfirmationPage.tsx';
+import AboutUsPage from './pages/AboutUsPage.tsx';
+import AdminDashboardPage from './pages/AdminDashboardPage.tsx';
 
 export interface Order {
   id: string;
